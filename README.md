@@ -4,6 +4,7 @@
 [![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/js)
 [![Size](https://img.shields.io/badge/Model_Size-%3C_270_KB-brightgreen?style=for-the-badge)](https://github.com/vladmandic/face-api)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25_Client--Side-blueviolet?style=for-the-badge)](https://en.wikipedia.org/wiki/Privacy_by_design)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Verified-EE1F23?style=for-the-badge)](https://SBanditaDas.github.io/Lite-Face-Sentinel-Model-Using-Faceapi.js/)
 
 **Face Sentinel** is a high-performance, ultra-lightweight biometric authentication system designed for modern web applications. By leveraging a custom **Hybrid Geometric Engine**, it achieves reliable face verification in under **270 KB**—making it the smallest functional face recognition solution for the browser.
 

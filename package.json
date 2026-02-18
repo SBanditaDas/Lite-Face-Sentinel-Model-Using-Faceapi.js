@@ -2,6 +2,7 @@
   "name": "face-sentinel",
   "version": "1.0.0",
   "description": "Lightweight face recognition model for React frontend (1-2 MB)",
+  "homepage": "https://SBanditaDas.github.io/Lite-Face-Sentinel-Model-Using-Faceapi.js/",
   "private": true,
   "dependencies": {
     "@tensorflow-models/blazeface": "^0.0.7",
@@ -13,6 +14,8 @@
     "react-webcam": "^7.2.0"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -38,6 +41,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
-    "@testing-library/user-event": "^14.5.1"
+    "@testing-library/user-event": "^14.5.1",
+    "gh-pages": "^6.3.0"
   }
 }
