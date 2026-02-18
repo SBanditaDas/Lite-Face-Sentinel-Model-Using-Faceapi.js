@@ -45,10 +45,6 @@ env/
 venv/
 ENV/
 
-# Models (temporary, until you add your own)
-public/models/face_recognition/*.bin
-public/models/face_recognition/model.json
-
 # Temporary files
 *.tflite
 temp_*

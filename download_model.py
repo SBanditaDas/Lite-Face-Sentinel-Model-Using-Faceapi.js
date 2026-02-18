@@ -64,52 +64,7 @@ def main():
     if total_size / 1024 <= 2.0:
         print("✅ SUCCESS! Model is under 2 MB!")
     
-    # Create usage guide
-    usage = """# Face Recognition Model (face-api.js)
-
-## Model Information
-- **Source**: face-api.js (pre-built, quantized)
-- **Size**: ~6-7 MB total (or use tiny_face_detector only for <1 MB)
-- **Format**: TensorFlow.js
-
-## Quick JavaScript Usage:
-
-```javascript
-import * as faceapi from 'face-api.js';
-
-// Load models
-await faceapi.nets.tinyFaceDetector.loadFromUri('./face_recognition_model');
-await faceapi.nets.faceRecognitionNet.loadFromUri('./face_recognition_model');
-
-// Detect face and get descriptor
-const detection = await faceapi
-  .detectSingleFace(imageElement, new faceapi.TinyFaceDetectorOptions())
-  .withFaceLandmarks()
-  .withFaceDescriptor();
-
-const descriptor = detection.descriptor; // 128-D embedding
-
-// Compare faces
-const distance = faceapi.euclideanDistance(descriptor1, descriptor2);
-const isSame = distance < 0.6; // Lower distance = more similar
-```
-
-## Installation:
-```bash
-npm install face-api.js
-```
-
-## Browser Usage (CDN):
-```html
-<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-```
-"""
-    
-    with open(os.path.join(OUTPUT_DIR, "USAGE.md"), "w") as f:
-        f.write(usage)
-    
     print(f"\n✓ Downloaded to: {OUTPUT_DIR}/")
-    print(f"✓ Usage guide: {OUTPUT_DIR}/USAGE.md")
     print()
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 /**
  * Face Detection Utilities using BlazeFace
- * Detects face bounding boxes in images/video frames
+ * Responsible for bounding box detection and ROI extraction.
  */
 
 import * as blazeface from '@tensorflow-models/blazeface';
@@ -14,32 +14,21 @@ let faceDetectionModel = null;
  */
 export async function loadFaceDetector() {
     if (!faceDetectionModel) {
-        console.log('Loading BlazeFace model...');
         faceDetectionModel = await blazeface.load(MODEL_CONFIG.FACE_DETECTION_CONFIG);
-        console.log('BlazeFace model loaded successfully');
     }
     return faceDetectionModel;
 }
 
 /**
  * Detect faces in an image or video frame
- * @param {HTMLVideoElement|HTMLImageElement|HTMLCanvasElement} input - Input element
- * @returns {Promise<Array>} Array of detected faces with bounding boxes
  */
 export async function detectFaces(input) {
-    if (!faceDetectionModel) {
-        await loadFaceDetector();
-    }
-
-    const predictions = await faceDetectionModel.estimateFaces(input, false);
-    return predictions;
+    if (!faceDetectionModel) await loadFaceDetector();
+    return await faceDetectionModel.estimateFaces(input, false);
 }
 
 /**
- * Extract face region from image based on bounding box
- * @param {HTMLVideoElement|HTMLImageElement|HTMLCanvasElement} input - Input element
- * @param {Object} face - Face detection result with bounding box
- * @returns {tf.Tensor3D} Cropped and resized face tensor (112x112x3)
+ * Extract faceregion from image based on bounding box
  */
 export function extractFaceROI(input, face) {
     const [x, y, width, height] = face.topLeft.concat(face.bottomRight).reduce((acc, val, i) => {
@@ -47,17 +36,14 @@ export function extractFaceROI(input, face) {
         return [...acc, val - acc[i - 2]];
     }, []);
 
-    // Add padding (10%) around face
     const padding = 0.1;
     const paddedX = Math.max(0, x - width * padding);
     const paddedY = Math.max(0, y - height * padding);
     const paddedWidth = width * (1 + 2 * padding);
     const paddedHeight = height * (1 + 2 * padding);
 
-    // Convert input to tensor
     let imageTensor = tf.browser.fromPixels(input);
 
-    // Crop face region
     const faceTensor = tf.image.cropAndResize(
         imageTensor.expandDims(0),
         [[paddedY / imageTensor.shape[0],
@@ -68,32 +54,23 @@ export function extractFaceROI(input, face) {
         [MODEL_CONFIG.INPUT_SIZE, MODEL_CONFIG.INPUT_SIZE]
     );
 
-    // Clean up
     imageTensor.dispose();
-
     return faceTensor.squeeze([0]);
 }
 
 /**
  * Get the largest detected face (closest to camera)
- * @param {Array} faces - Array of detected faces
- * @returns {Object|null} Largest face or null
  */
 export function getLargestFace(faces) {
     if (!faces || faces.length === 0) return null;
 
     return faces.reduce((largest, face) => {
-        const area = (face.bottomRight[0] - face.topLeft[0]) *
-            (face.bottomRight[1] - face.topLeft[1]);
-        const largestArea = (largest.bottomRight[0] - largest.topLeft[0]) *
-            (largest.bottomRight[1] - largest.topLeft[1]);
+        const area = (face.bottomRight[0] - face.topLeft[0]) * (face.bottomRight[1] - face.topLeft[1]);
+        const largestArea = (largest.bottomRight[0] - largest.topLeft[0]) * (largest.bottomRight[1] - largest.topLeft[1]);
         return area > largestArea ? face : largest;
     });
 }
 
-/**
- * Cleanup resources
- */
 export function disposeDetector() {
     if (faceDetectionModel) {
         faceDetectionModel.dispose();

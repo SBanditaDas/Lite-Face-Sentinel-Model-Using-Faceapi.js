@@ -1,6 +1,6 @@
 /**
  * useFaceRecognition Hook
- * React hook for face recognition functionality using face-api.js
+ * Manages model lifecycle, face enrollment, and real-time verification results.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -21,29 +21,23 @@ export function useFaceRecognition() {
 
     const modelRef = useRef(null);
     const referenceEmbeddingRef = useRef(null);
-    const unauthorizedEmbeddingsRef = useRef([]); // Track unique unauthorized persons
+    const unauthorizedEmbeddingsRef = useRef([]);
     const verificationIntervalRef = useRef(null);
     const videoRef = useRef(null);
 
-    // Persist logs
     useEffect(() => {
         localStorage.setItem('face_sentinel_unauthorized_logs', JSON.stringify(unauthorizedLogs));
     }, [unauthorizedLogs]);
 
-    // Initialize model on mount
     useEffect(() => {
         const initModel = async () => {
             try {
                 setIsLoading(true);
-                setError(null);
-
                 modelRef.current = new FaceApiRecognitionModel();
                 await modelRef.current.loadModel();
-
                 setIsModelReady(true);
                 setIsLoading(false);
             } catch (err) {
-                console.error('Failed to initialize model:', err);
                 setError('Failed to load face recognition model: ' + err.message);
                 setIsLoading(false);
             }
@@ -51,24 +45,18 @@ export function useFaceRecognition() {
 
         initModel();
 
-        // Cleanup on unmount
         return () => {
-            if (modelRef.current) {
-                modelRef.current.dispose();
-            }
-            if (verificationIntervalRef.current) {
-                clearInterval(verificationIntervalRef.current);
-            }
+            if (modelRef.current) modelRef.current.dispose();
+            if (verificationIntervalRef.current) clearInterval(verificationIntervalRef.current);
         };
     }, []);
 
     /**
-     * Add an unauthorized encounter to the logs
+     * Clusters unauthorized faces to identify unique individuals
      */
     const logUnauthorizedEncounter = useCallback((embedding) => {
         let personId = -1;
 
-        // Check if this is a person we've seen before (unauthorized)
         for (let i = 0; i < unauthorizedEmbeddingsRef.current.length; i++) {
             const comp = modelRef.current.isSamePerson(unauthorizedEmbeddingsRef.current[i], embedding);
             if (comp.isSame) {
@@ -77,7 +65,6 @@ export function useFaceRecognition() {
             }
         }
 
-        // If new person, add to reference list
         if (personId === -1) {
             unauthorizedEmbeddingsRef.current.push(embedding);
             personId = unauthorizedEmbeddingsRef.current.length;
@@ -91,70 +78,52 @@ export function useFaceRecognition() {
             personId: personId
         };
 
-        setUnauthorizedLogs(prev => [newLog, ...prev].slice(0, 100)); // Keep last 100
+        setUnauthorizedLogs(prev => [newLog, ...prev].slice(0, 100));
     }, []);
 
     /**
-     * Enroll a face as the reference for verification
-     * @param {HTMLVideoElement} videoElement - Video element to capture from
+     * Capture reference face for future verification
      */
     const enrollFace = useCallback(async (videoElement) => {
-        if (!isModelReady) {
-            throw new Error('Model not ready');
-        }
+        if (!isModelReady) throw new Error('Model not ready');
 
         try {
             setError(null);
-            console.log('Enrolling face...');
-
             const result = await modelRef.current.extractEmbedding(videoElement);
 
             if (!result || !result.embedding) {
                 throw new Error('No face detected. Please ensure your face is visible in the camera.');
             }
 
-            // Check liveness
             if (!result.liveness.isLive) {
-                throw new Error(`⚠️ Photo detected! ${result.liveness.reason}\n\nPlease use a real face, not a photo or screen.`);
+                throw new Error(`⚠️ Photo detected! ${result.liveness.reason}`);
             }
 
-            const embedding = result.embedding;
-
-            // Store new reference embedding (arrays don't need disposal)
-            referenceEmbeddingRef.current = embedding;
-            console.log('Face enrolled successfully');
-
+            referenceEmbeddingRef.current = result.embedding;
             return true;
         } catch (err) {
-            console.error('Face enrollment failed:', err);
             setError(err.message);
             throw err;
         }
     }, [isModelReady]);
 
     /**
-     * Verify current face against reference
-     * @param {HTMLVideoElement} videoElement - Video element to verify
+     * Checks a single frame against the reference embedding
      */
     const verifySingleFrame = useCallback(async (videoElement) => {
-        if (!isModelReady || !referenceEmbeddingRef.current) {
-            return null;
-        }
+        if (!isModelReady || !referenceEmbeddingRef.current) return null;
 
         try {
             const result = await modelRef.current.extractEmbedding(videoElement);
 
             if (!result || !result.embedding) {
-                // Clear verification result when no face is detected
                 setVerificationResult(null);
-                console.warn('No face detected in frame');
                 return null;
             }
 
             const currentEmbedding = result.embedding;
             const livenessResult = result.liveness;
 
-            // Check liveness first
             if (!livenessResult.isLive) {
                 setVerificationResult({
                     isSame: false,
@@ -180,22 +149,19 @@ export function useFaceRecognition() {
 
             setVerificationResult(verifyResult);
 
-            // Log unauthorized access
             if (!comparisonResult.isSame) {
                 logUnauthorizedEncounter(currentEmbedding);
             }
 
             return verifyResult;
         } catch (err) {
-            console.error('Verification failed:', err);
             setError(err.message);
             return null;
         }
     }, [isModelReady, logUnauthorizedEncounter]);
 
     /**
-     * Start continuous real-time verification
-     * @param {HTMLVideoElement} videoElement - Video element to monitor
+     * Starts continuous background verification
      */
     const startVerification = useCallback((videoElement) => {
         if (!isModelReady || !referenceEmbeddingRef.current) {
@@ -203,30 +169,21 @@ export function useFaceRecognition() {
             return;
         }
 
-        if (isVerifying) {
-            console.log('Verification already running');
-            return;
-        }
+        if (isVerifying) return;
 
         setIsVerifying(true);
         setError(null);
         videoRef.current = videoElement;
 
-        console.log('Starting real-time verification...');
-
-        // Verify immediately
         verifySingleFrame(videoElement);
 
-        // Set up interval for continuous verification
         verificationIntervalRef.current = setInterval(() => {
-            if (videoRef.current) {
-                verifySingleFrame(videoRef.current);
-            }
+            if (videoRef.current) verifySingleFrame(videoRef.current);
         }, MODEL_CONFIG.VERIFICATION_INTERVAL_MS);
     }, [isModelReady, isVerifying, verifySingleFrame]);
 
     /**
-     * Stop continuous verification
+     * Stops the continuous verification loop
      */
     const stopVerification = useCallback(() => {
         if (verificationIntervalRef.current) {
@@ -237,25 +194,20 @@ export function useFaceRecognition() {
         setIsVerifying(false);
         setVerificationResult(null);
         videoRef.current = null;
-
-        console.log('Stopped verification');
     }, []);
 
     /**
-     * Reset all state (clear reference embedding)
+     * Clears reference data and resets state
      */
     const reset = useCallback(() => {
         stopVerification();
-
-        // Clear reference embedding (arrays don't need disposal)
         referenceEmbeddingRef.current = null;
-
         setVerificationResult(null);
         setError(null);
     }, [stopVerification]);
 
     /**
-     * Clear all logs
+     * Clears all security logs from memory and storage
      */
     const clearLogs = useCallback(() => {
         setUnauthorizedLogs([]);

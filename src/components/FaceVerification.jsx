@@ -1,6 +1,6 @@
 /**
  * FaceVerification Component
- * Main UI component for face enrollment and verification
+ * Main interface for face enrollment, real-time verification, and security logging.
  */
 
 import React, { useRef, useState } from 'react';
@@ -11,7 +11,7 @@ import './FaceVerification.css';
 function FaceVerification() {
     const webcamRef = useRef(null);
     const [webcamReady, setWebcamReady] = useState(false);
-    const [enrolled, setEnrolled] = useState(false); // Track enrollment locally
+    const [enrolled, setEnrolled] = useState(false);
 
     const {
         isLoading,
@@ -28,49 +28,38 @@ function FaceVerification() {
         reset
     } = useFaceRecognition();
 
-    // Handle webcam ready
-    const handleWebcamReady = () => {
-        setWebcamReady(true);
-        console.log('Webcam ready');
-    };
+    const handleWebcamReady = () => setWebcamReady(true);
 
-    // Handle enroll button click
     const handleEnroll = async () => {
         if (webcamRef.current && webcamRef.current.video) {
             try {
-                console.log('User clicked Enroll Face button');
                 await enrollFace(webcamRef.current.video);
-                setEnrolled(true); // Update local state to trigger re-render
+                setEnrolled(true);
                 alert('✓ Face enrolled successfully! You can now start verification.');
             } catch (err) {
-                console.error('Enrollment error:', err);
-                alert(`❌ Enrollment failed: ${err.message}\n\nTip: Ensure your face is clearly visible and well-lit.`);
+                alert(`❌ Enrollment failed: ${err.message}`);
             }
         } else {
             alert('❌ Webcam not ready. Please wait a moment and try again.');
         }
     };
 
-    // Handle start verification
     const handleStartVerification = () => {
         if (webcamRef.current && webcamRef.current.video) {
             startVerification(webcamRef.current.video);
         }
     };
 
-    // Handle reset
     const handleReset = () => {
         setEnrolled(false);
         reset();
     };
 
-    // Determine border color based on verification result
     const getBorderClass = () => {
         if (!verificationResult) return '';
         return verificationResult.isSame ? 'border-success' : 'border-danger';
     };
 
-    // Get confidence level class
     const getConfidenceClass = () => {
         if (!verificationResult) return '';
         return `confidence-${verificationResult.level}`;
@@ -125,7 +114,6 @@ function FaceVerification() {
                             </div>
                         )}
 
-                        {/* Show message when verifying but no face detected */}
                         {isVerifying && !verificationResult && (
                             <div className="verification-overlay">
                                 <div className="verification-message" style={{ color: '#ffa500' }}>
@@ -146,36 +134,24 @@ function FaceVerification() {
                 {isModelReady && webcamReady && (
                     <div className="controls">
                         {!enrolled && !hasReference && (
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleEnroll}
-                            >
+                            <button className="btn btn-primary" onClick={handleEnroll}>
                                 📸 Enroll Face
                             </button>
                         )}
 
                         {(enrolled || hasReference) && !isVerifying && (
                             <>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={handleStartVerification}
-                                >
+                                <button className="btn btn-success" onClick={handleStartVerification}>
                                     ▶ Start Verification
                                 </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={handleReset}
-                                >
+                                <button className="btn btn-secondary" onClick={handleReset}>
                                     🔄 Reset
                                 </button>
                             </>
                         )}
 
                         {isVerifying && (
-                            <button
-                                className="btn btn-warning"
-                                onClick={stopVerification}
-                            >
+                            <button className="btn btn-warning" onClick={stopVerification}>
                                 ⏸ Stop Verification
                             </button>
                         )}
@@ -227,10 +203,7 @@ function FaceVerification() {
                         </div>
 
                         {unauthorizedLogs.length > 0 && (
-                            <button
-                                className="btn btn-clear-logs"
-                                onClick={clearLogs}
-                            >
+                            <button className="btn btn-clear-logs" onClick={clearLogs}>
                                 🗑️ Clear Logs
                             </button>
                         )}
