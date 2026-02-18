@@ -2,7 +2,7 @@
   "name": "face-sentinel",
   "version": "1.0.0",
   "description": "Lightweight face recognition model for React frontend (1-2 MB)",
-  "homepage": "https://SBanditaDas.github.io/Lite-Face-Sentinel-Model-Using-Faceapi.js/",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@tensorflow-models/blazeface": "^0.0.7",
