@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Lite-Face-Sentinel-Model-Using-Faceapi.js/static/css/main.86886c1a.css",
+    "main.js": "/Lite-Face-Sentinel-Model-Using-Faceapi.js/static/js/main.78cf6578.js",
+    "index.html": "/Lite-Face-Sentinel-Model-Using-Faceapi.js/index.html",
+    "main.86886c1a.css.map": "/Lite-Face-Sentinel-Model-Using-Faceapi.js/static/css/main.86886c1a.css.map",
+    "main.78cf6578.js.map": "/Lite-Face-Sentinel-Model-Using-Faceapi.js/static/js/main.78cf6578.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.86886c1a.css",
+    "static/js/main.78cf6578.js"
+  ]
+}
