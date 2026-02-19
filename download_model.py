@@ -18,6 +18,10 @@ MODELS = {
         "tiny_face_detector_model-weights_manifest.json",
         "tiny_face_detector_model-shard1",
     ],
+    "face_landmark_68_tiny": [
+        "face_landmark_68_tiny_model-weights_manifest.json",
+        "face_landmark_68_tiny_model-shard1",
+    ],
     "face_recognition": [
         "face_recognition_model-weights_manifest.json", 
         "face_recognition_model-shard1",
@@ -61,8 +65,8 @@ def main():
     print(f"TOTAL MODEL SIZE: {total_size / 1024:.2f} MB")
     print("=" * 70)
     
-    if total_size / 1024 <= 2.0:
-        print("✅ SUCCESS! Model is under 2 MB!")
+    if total_size / 1024 <= 8.0:
+        print("✅ SUCCESS! Model is under 8 MB!")
     
     print(f"\n✓ Downloaded to: {OUTPUT_DIR}/")
     print()

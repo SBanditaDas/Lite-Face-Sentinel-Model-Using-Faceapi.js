@@ -140,11 +140,16 @@ export function useFaceRecognition() {
                 currentEmbedding
             );
 
+            // Convert Euclidean distance to a presentable confidence percentage
+            // 0.0 distance = 100%, 1.0+ distance = 0%
+            const displayConfidence = Math.max(0, 100 - (comparisonResult.confidence * 100));
+
             const verifyResult = {
                 ...comparisonResult,
+                displayConfidence,
                 message: comparisonResult.isSame
-                    ? `Same Person (${(comparisonResult.confidence * 100).toFixed(1)}%)`
-                    : `Different Person (${(comparisonResult.confidence * 100).toFixed(1)}%)`
+                    ? `Same Person (${displayConfidence.toFixed(1)}%)`
+                    : `Different Person (${displayConfidence.toFixed(1)}%)`
             };
 
             setVerificationResult(verifyResult);
